@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { stripe as getStripe } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { PRICE_AMOUNT } from "@/lib/defaults";
 
@@ -8,6 +8,13 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Payment is not configured yet" },
+      { status: 503 }
+    );
   }
 
   const body = await request.json();
@@ -29,8 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already paid" }, { status: 400 });
   }
 
-  // Create Stripe checkout session
-  const checkoutSession = await getStripe().checkout.sessions.create({
+  const checkoutSession = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items: [
       {

@@ -1,20 +1,7 @@
 import Stripe from "stripe";
 
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) {
-    throw new Error("STRIPE_SECRET_KEY is not set");
-  }
-  return new Stripe(key, {
-    apiVersion: "2026-05-27.dahlia",
-  });
-}
+const key = process.env.STRIPE_SECRET_KEY;
 
-let _stripe: Stripe | null = null;
-
-export function stripe() {
-  if (!_stripe) {
-    _stripe = getStripe();
-  }
-  return _stripe;
-}
+export const stripe = key
+  ? new Stripe(key, { apiVersion: "2026-05-27.dahlia" })
+  : null;

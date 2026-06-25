@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
-import { stripe as getStripe } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Payment is not configured yet" },
+      { status: 503 }
+    );
+  }
+
   const body = await request.text();
   const signature = request.headers.get("stripe-signature") || "";
 
   let event;
   try {
-    event = getStripe().webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET || ""
@@ -25,7 +32,6 @@ export async function POST(request: Request) {
     const paymentIntentId = session.payment_intent;
 
     if (eventId && userId && paymentIntentId) {
-      // Mark event as paid
       await prisma.event.update({
         where: { id: eventId },
         data: {
@@ -34,7 +40,6 @@ export async function POST(request: Request) {
         },
       });
 
-      // Create payment record
       await prisma.payment.create({
         data: {
           userId,
