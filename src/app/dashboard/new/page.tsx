@@ -27,7 +27,7 @@ export default function NewEvent() {
       });
       const data = await res.json();
       if (data.event) {
-        router.push(`/dashboard/${data.event.id}`);
+        router.push(`/dashboard/${data.event.id}/edit`);
       }
     } catch {
       alert("Failed to create event. Try again.");
